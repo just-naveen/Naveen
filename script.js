@@ -1,92 +1,67 @@
-/* ================================================
-   NAVEEN P — Portfolio JS
-================================================ */
-
 document.addEventListener('DOMContentLoaded', function () {
 
-  /* ── LOADER ── */
-  var loader = document.getElementById('loader');
-
-  setTimeout(function () {
-    loader.style.transition = 'opacity 0.55s ease';
-    loader.style.opacity = '0';
-    setTimeout(function () {
-      loader.style.display = 'none';
-      revealHero();
-    }, 580);
-  }, 1100);
-
-  /* ── HERO REVEAL ── */
-  function revealHero() {
-    var items = [
-      { sel: '.hero-badge',   delay: 0   },
-      { sel: '.hero-name',    delay: 140 },
-      { sel: '.hero-role',    delay: 240 },
-      { sel: '.hero-desc',    delay: 330 },
-      { sel: '.hero-actions', delay: 420 },
-      { sel: '.hero-scroll',  delay: 580 }
-    ];
-
-    items.forEach(function (item) {
-      var el = document.querySelector(item.sel);
-      if (!el) return;
-      el.style.opacity = '0';
-      el.style.transform = 'translateY(16px)';
-      el.style.transition = 'opacity 0.8s cubic-bezier(0.22,1,0.36,1), transform 0.8s cubic-bezier(0.22,1,0.36,1)';
-      setTimeout(function () {
-        el.style.opacity = '1';
-        el.style.transform = 'translateY(0)';
-      }, item.delay);
-    });
+  /* ── TYPED ROLE ── */
+  var roles = ['Full-Stack Developer', 'Blockchain Engineer', 'Coding Mentor', 'Python Developer'];
+  var ri = 0, ci = 0, deleting = false;
+  var el = document.getElementById('typedRole');
+  function type() {
+    if (!el) return;
+    var cur = roles[ri];
+    if (!deleting) {
+      el.textContent = cur.slice(0, ++ci);
+      if (ci === cur.length) { deleting = true; setTimeout(type, 1800); return; }
+    } else {
+      el.textContent = cur.slice(0, --ci);
+      if (ci === 0) { deleting = false; ri = (ri + 1) % roles.length; }
+    }
+    setTimeout(type, deleting ? 60 : 100);
   }
+  setTimeout(type, 500);
 
-  /* ── CURSOR ── */
-  var dot  = document.querySelector('.cursor-dot');
-  var ring = document.querySelector('.cursor-ring');
-  var mx = 0, my = 0, rx = 0, ry = 0;
-
-  document.addEventListener('mousemove', function (e) {
-    mx = e.clientX; my = e.clientY;
-    dot.style.left = mx + 'px';
-    dot.style.top  = my + 'px';
-  });
-
-  (function animateRing() {
-    rx += (mx - rx) * 0.1;
-    ry += (my - ry) * 0.1;
-    ring.style.left = rx + 'px';
-    ring.style.top  = ry + 'px';
-    requestAnimationFrame(animateRing);
-  })();
-
-  document.querySelectorAll('a, button, .project-card, .skill-card, .edu-card, .stat-row').forEach(function (el) {
-    el.addEventListener('mouseenter', function () {
-      dot.classList.add('big');
-      ring.classList.add('big');
-    });
-    el.addEventListener('mouseleave', function () {
-      dot.classList.remove('big');
-      ring.classList.remove('big');
-    });
-  });
-
-  /* ── NAV ── */
-  var nav = document.querySelector('nav');
-
+  /* ── NAV SCROLL ── */
+  var navbar = document.getElementById('navbar');
   window.addEventListener('scroll', function () {
-    nav.classList.toggle('scrolled', window.scrollY > 50);
+    if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 60);
     highlightNav();
   }, { passive: true });
 
   function highlightNav() {
-    var links = document.querySelectorAll('.nav-center a');
-    var secs  = document.querySelectorAll('section[id]');
-    var cur   = '';
+    var links = document.querySelectorAll('.nav-link');
+    var secs = document.querySelectorAll('section[id]');
+    var cur = '';
     secs.forEach(function (s) {
       if (window.scrollY >= s.offsetTop - 200) cur = s.id;
     });
     links.forEach(function (a) {
       a.classList.toggle('active', a.getAttribute('href') === '#' + cur);
+    });
+  }
+
+  /* ── HAMBURGER ── */
+  var ham = document.getElementById('hamburger');
+  var overlay = document.getElementById('mobileOverlay');
+  var open = false;
+  if (ham && overlay) {
+    ham.addEventListener('click', function () {
+      open = !open;
+      overlay.classList.toggle('open', open);
+      document.body.style.overflow = open ? 'hidden' : '';
+    });
+    overlay.querySelectorAll('a').forEach(function (a) {
+      a.addEventListener('click', function () {
+        open = false; overlay.classList.remove('open');
+        document.body.style.overflow = '';
+      });
+    });
+  }
+
+  /* ── THEME TOGGLE ── */
+  var themeBtn = document.getElementById('themeToggle');
+  if (themeBtn) {
+    themeBtn.addEventListener('click', function () {
+      var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      document.documentElement.setAttribute('data-theme', isLight ? '' : 'light');
+      themeBtn.textContent = isLight ? '☀️' : '🌙';
     });
   }
 
@@ -106,50 +81,31 @@ document.addEventListener('DOMContentLoaded', function () {
         io.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
   document.querySelectorAll('.reveal').forEach(function (el, i) {
     var sibs = el.parentElement.querySelectorAll('.reveal');
     if (sibs.length > 1) {
-      el.style.transitionDelay = (Array.from(sibs).indexOf(el) * 90) + 'ms';
+      el.style.transitionDelay = (Array.from(sibs).indexOf(el) * 100) + 'ms';
     }
     io.observe(el);
   });
 
-  /* ── STAGGER CARDS ── */
-  function staggerItems(selector, ioOptions) {
-    var items = document.querySelectorAll(selector);
-    var obs = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          var idx = Array.from(items).indexOf(entry.target);
-          setTimeout(function () {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0)';
-          }, idx * 90);
-          obs.unobserve(entry.target);
-        }
-      });
-    }, ioOptions || { threshold: 0.1 });
-
-    items.forEach(function (el) {
-      el.style.opacity = '0';
-      el.style.transform = 'translateY(18px)';
-      el.style.transition = 'opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1)';
-      obs.observe(el);
+  /* ── SKILL BARS ── */
+  var barIo = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        var bar = entry.target.querySelector('.sk-bar');
+        if (bar) bar.style.width = bar.dataset.width + '%';
+        barIo.unobserve(entry.target);
+      }
     });
-  }
-
-  staggerItems('.project-card');
-  staggerItems('.skill-card');
-  staggerItems('.exp-item');
-  staggerItems('.edu-card');
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.skill-card').forEach(function (c) { barIo.observe(c); });
 
   /* ── COUNTER ── */
   function countUp(el, to, suffix) {
-    var start = null;
-    var dur = 1200;
-    suffix = suffix || '';
+    var start = null; var dur = 1400; suffix = suffix || '';
     (function step(ts) {
       if (!start) start = ts;
       var p = Math.min((ts - start) / dur, 1);
@@ -159,7 +115,6 @@ document.addEventListener('DOMContentLoaded', function () {
       else el.textContent = to + suffix;
     })(performance.now());
   }
-
   var cio = new IntersectionObserver(function (entries) {
     entries.forEach(function (entry) {
       if (entry.isIntersecting) {
@@ -169,8 +124,23 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
   }, { threshold: 0.5 });
-
   document.querySelectorAll('[data-count]').forEach(function (el) { cio.observe(el); });
+
+  /* ── CONTACT FORM ── */
+  var form = document.getElementById('contactForm');
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var btn = form.querySelector('button[type="submit"]');
+      btn.textContent = '✅ Message Sent!';
+      btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+      setTimeout(function () {
+        btn.textContent = 'Send Message →';
+        btn.style.background = '';
+        form.reset();
+      }, 3000);
+    });
+  }
 
   /* ── FOOTER YEAR ── */
   var yr = document.getElementById('year');
